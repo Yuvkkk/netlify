@@ -1,10 +1,10 @@
+const fetch = require("node-fetch");
+
+const accountId = "005fa8f08ff41590000000002";
+const applicationKey = "K005rTY6c7IuYqYDDdYQbhlCEc9qy3Y";
+const authUrl = "https://api.backblazeb2.com/b2api/v2/b2_authorize_account";
+
 exports.handler = async (event) => {
-  const fetch = (await import("node-fetch")).default;
-
-  const accountId = "005fa8f08ff41590000000002";
-  const applicationKey = "K005rTY6c7IuYqYDDdYQbhlCEc9qy3Y";
-  const authUrl = "https://api.backblazeb2.com/b2api/v2/b2_authorize_account";
-
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
