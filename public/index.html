@@ -1,32 +1,35 @@
-const fileInput = document.querySelector("#fileInput");
-const form = document.querySelector("#uploadForm");
-
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const file = fileInput.files[0];
-
-  try {
-    const response = await fetch("/.netlify/functions/uploadFile", {
-      method: "POST",
-      body: JSON.stringify({
-        file: file,
-        fileName: file.name,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const result = await response.json();
-    console.log(result);
-    if (response.ok) {
-      alert("File uploaded successfully!");
-    } else {
-      alert("Error: " + result.message);
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>文件上传</title>
+</head>
+<body>
+  <h1>上传文件到免费存储</h1>
+  <input type="file" id="fileInput" />
+  <button onclick="upload()">上传</button>
+  <p id="result"></p>
+  <script>
+    async function upload() {
+      const file = document.getElementById("fileInput").files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const fileData = reader.result.split(",")[1]; // 提取 Base64 数据
+        try {
+          const response = await fetch("/.netlify/functions/upload-file", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ file: fileData, fileName: file.name }),
+          });
+          const data = await response.json();
+          document.getElementById("result").textContent = data.message;
+        } catch (error) {
+          document.getElementById("result").textContent = "上传失败: " + error.message;
+        }
+      };
+      reader.readAsDataURL(file);
     }
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    alert("File upload failed!");
-  }
-});
+  </script>
+</body>
+</html>
