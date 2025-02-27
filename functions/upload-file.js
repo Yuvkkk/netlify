@@ -1,4 +1,4 @@
-const axios = require("axios");
+const fetch = require("node-fetch");
 
 const accountId = "005fa8f08ff41590000000002";
 const applicationKey = "K005rTY6c7IuYqYDDdYQbhlCEc9qy3Y";
@@ -18,37 +18,39 @@ exports.handler = async (event) => {
     }
 
     console.log("文件信息:", fileName);
-    const authResponse = await axios({
-      method: "post",
-      url: authUrl,
-      data: undefined, // 明确无 body
-      auth: {
-        username: accountId,
-        password: applicationKey,
-      },
+    const authResponse = await fetch(authUrl, {
+      method: "POST",
       headers: {
+        Authorization: "Basic " + Buffer.from(`${accountId}:${applicationKey}`).toString("base64"),
         "Content-Length": "0",
-        "Content-Type": "application/x-www-form-urlencoded", // 模仿 curl
       },
     });
-    const { authorizationToken, apiUrl } = authResponse.data;
+    const authData = await authResponse.json();
+    if (!authResponse.ok) throw new Error(JSON.stringify(authData));
+    const { authorizationToken, apiUrl } = authData;
     console.log("B2 授权成功", { authorizationToken, apiUrl });
 
-    const uploadUrlResponse = await axios.post(
-      `${apiUrl}/b2api/v2/b2_get_upload_url`,
-      { bucketId: "5f4a78ff70c84f6f94510519" },
-      { headers: { Authorization: authorizationToken } }
-    );
-    const { uploadUrl, authorizationToken: uploadAuthToken } = uploadUrlResponse.data;
+    const uploadUrlResponse = await fetch(`${apiUrl}/b2api/v2/b2_get_upload_url`, {
+      method: "POST",
+      headers: {
+        Authorization: authorizationToken,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ bucketId: "5f4a78ff70c84f6f94510519" }),
+    });
+    const uploadUrlData = await uploadUrlResponse.json();
+    const { uploadUrl, authorizationToken: uploadAuthToken } = uploadUrlData;
     console.log("获取上传 URL 成功:", uploadUrl);
 
-    await axios.post(uploadUrl, file, {
+    await fetch(uploadUrl, {
+      method: "POST",
       headers: {
         Authorization: uploadAuthToken,
         "Content-Type": "application/json",
         "X-Bz-File-Name": encodeURIComponent(fileName),
         "X-Bz-Content-Sha1": "do_not_verify",
       },
+      body: file,
     });
     console.log("上传成功:", fileName);
 
@@ -60,7 +62,7 @@ exports.handler = async (event) => {
       }),
     };
   } catch (error) {
-    console.error("处理失败:", error.message, error.response ? error.response.data : "无响应数据");
+    console.error("处理失败:", error.message);
     return {
       statusCode: 500,
       body: JSON.stringify({ message: "Error uploading file", error: error.message }),
