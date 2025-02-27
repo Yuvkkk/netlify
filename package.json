@@ -2,6 +2,6 @@
   "name": "my-netlify-project",
   "version": "1.0.0",
   "dependencies": {
-    "b2-sdk": "^1.0.0"
+    "axios": "^1.6.7"
   }
 }
