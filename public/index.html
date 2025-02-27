@@ -1,35 +1,13 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-  <meta charset="UTF-8">
-  <title>文件上传</title>
-</head>
-<body>
-  <h1>上传 JSON 文件到 Backblaze B2</h1>
-  <input type="file" id="fileInput" accept=".json" />
-  <button onclick="upload()">上传</button>
-  <p id="result"></p>
-  <script>
-    async function upload() {
-      const file = document.getElementById("fileInput").files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const fileContent = reader.result; // 直接读取文本内容
-        try {
-          const response = await fetch("/.netlify/functions/upload-file", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ file: fileContent, fileName: file.name }),
-          });
-          const data = await response.json();
-          document.getElementById("result").textContent = data.message;
-        } catch (error) {
-          document.getElementById("result").textContent = "上传失败: " + error.message;
-        }
-      };
-      reader.readAsText(file); // 读取为文本而非 Base64
+<script>
+  async function upload() {
+    try {
+      const response = await fetch("/.netlify/functions/upload-file", {
+        method: "GET",
+      });
+      const data = await response.json();
+      document.getElementById("result").textContent = data.message;
+    } catch (error) {
+      document.getElementById("result").textContent = "请求失败: " + error.message;
     }
-  </script>
-</body>
-</html>
+  }
+</script>
