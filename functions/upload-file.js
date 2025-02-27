@@ -18,13 +18,17 @@ exports.handler = async (event) => {
     }
 
     console.log("文件信息:", fileName);
-    const authResponse = await axios.post(authUrl, null, {
+    const authResponse = await axios({
+      method: "post",
+      url: authUrl,
+      data: undefined, // 明确无 body
       auth: {
         username: accountId,
         password: applicationKey,
       },
       headers: {
-        "Content-Length": "0", // 确保授权请求无 body
+        "Content-Length": "0",
+        "Content-Type": "application/x-www-form-urlencoded", // 模仿 curl
       },
     });
     const { authorizationToken, apiUrl } = authResponse.data;
