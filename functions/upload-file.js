@@ -19,12 +19,25 @@ exports.handler = async (event) => {
     }
 
     console.log("文件信息:", fileName);
-    await b2.authorize();
+    // 使用 b2-sdk 的 authorizeAccount
+    await b2.authorizeAccount({
+      accountId: "005fa8f08ff41590000000002",
+      applicationKey: "K005rTY6c7IuYqYDDdYQbhlCEc9qy3Y",
+    });
     console.log("B2 授权成功");
-    const response = await b2.uploadFile({
+
+    // 获取上传 URL
+    const { data: uploadUrlData } = await b2.getUploadUrl({
       bucketId: "5f4a78ff70c84f6f94510519",
+    });
+    console.log("获取上传 URL 成功:", uploadUrlData.uploadUrl);
+
+    // 上传文件
+    const response = await b2.uploadFile({
+      uploadUrl: uploadUrlData.uploadUrl,
+      uploadAuthToken: uploadUrlData.authorizationToken,
       fileName: fileName,
-      data: Buffer.from(file, "base64"), // 解码 Base64 数据
+      data: Buffer.from(file, "base64"),
     });
 
     console.log("上传成功:", fileName);
