@@ -1,77 +1,39 @@
-const fetch = require("node-fetch");
-
-const accountId = "005fa8f08ff41590000000002";
-const applicationKey = "K005rTY6c7IuYqYDDdYQbhlCEc9qy3Y";
-const authUrl = "https://api.backblazeb2.com/b2api/v2/b2_authorize_account";
-
-exports.handler = async (event) => {
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
-
-  console.log("收到请求:", event.body ? event.body.slice(0, 100) : "无请求体");
-  try {
-    if (!event.body) {
-      console.log("错误: 请求体为空");
-      return { statusCode: 400, body: JSON.stringify({ message: "请求体为空" }) };
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>文件上传</title>
+</head>
+<body>
+  <h1>上传文件到 Backblaze B2</h1>
+  <input type="file" id="fileInput" accept=".zip" />
+  <button onclick="upload()">上传</button>
+  <p id="result"></p>
+  <script>
+    async function upload() {
+      const file = document.getElementById("fileInput").files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const fileContent = reader.result.split(",")[1]; // 提取 Base64 数据
+        try {
+          const response = await fetch("/.netlify/functions/upload-file", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              file: fileContent,
+              fileName: file.name,
+              mimeType: file.type // 发送 MIME 类型
+            }),
+          });
+          const data = await response.json();
+          document.getElementById("result").textContent = data.message;
+        } catch (error) {
+          document.getElementById("result").textContent = "上传失败: " + error.message;
+        }
+      };
+      reader.readAsDataURL(file); // 读取为 Base64
     }
-
-    const { file, fileName } = JSON.parse(event.body);
-    if (!file || !fileName) {
-      console.log("错误: 缺少文件或文件名");
-      return { statusCode: 400, body: JSON.stringify({ message: "缺少文件或文件名" }) };
-    }
-
-    console.log("文件信息:", fileName);
-    const authResponse = await fetch(authUrl, {
-      method: "GET", // 保持 GET，因为它已验证成功
-      headers: {
-        Authorization: "Basic " + Buffer.from(`${accountId}:${applicationKey}`).toString("base64"),
-      },
-    });
-    const authData = await authResponse.json();
-    if (!authResponse.ok) throw new Error(JSON.stringify(authData));
-    const { authorizationToken, apiUrl } = authData;
-    console.log("B2 授权成功", { authorizationToken, apiUrl });
-
-    const uploadUrlResponse = await fetch(`${apiUrl}/b2api/v2/b2_get_upload_url`, {
-      method: "POST",
-      headers: {
-        Authorization: authorizationToken,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ bucketId: "5f4a78ff70c84f6f94510519" }),
-    });
-    const uploadUrlData = await uploadUrlResponse.json();
-    if (!uploadUrlResponse.ok) throw new Error(JSON.stringify(uploadUrlData));
-    const { uploadUrl, authorizationToken: uploadAuthToken } = uploadUrlData;
-    console.log("获取上传 URL 成功:", uploadUrl);
-
-    const uploadResponse = await fetch(uploadUrl, {
-      method: "POST",
-      headers: {
-        Authorization: uploadAuthToken,
-        "Content-Type": "application/json",
-        "X-Bz-File-Name": encodeURIComponent(fileName),
-        "X-Bz-Content-Sha1": "do_not_verify",
-      },
-      body: file,
-    });
-    if (!uploadResponse.ok) throw new Error(await uploadResponse.text());
-    console.log("上传成功:", fileName);
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: "JSON file uploaded successfully",
-        fileUrl: `${apiUrl}/file/my-free-storage/${encodeURIComponent(fileName)}`,
-      }),
-    };
-  } catch (error) {
-    console.error("处理失败:", error.message);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: "Error uploading file", error: error.message }),
-    };
-  }
-};
+  </script>
+</body>
+</html>
