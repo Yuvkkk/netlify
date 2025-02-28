@@ -18,7 +18,7 @@ exports.handler = async () => {
     console.log("B2 授权成功", { authorizationToken, apiUrl });
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "B2 授权成功", authorizationToken }),
+      body: JSON.stringify({ message: "B2 授权成功", authorizationToken, apiUrl }),
     };
   } catch (error) {
     console.error("授权失败:", error.message);
