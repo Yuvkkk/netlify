@@ -10,7 +10,9 @@ exports.handler = async () => {
       method: "POST",
       headers: {
         Authorization: "Basic " + Buffer.from(`${accountId}:${applicationKey}`).toString("base64"),
+        // 仅保留 Authorization，避免任何多余头
       },
+      body: null, // 明确无请求体
     });
     const authData = await authResponse.json();
     if (!authResponse.ok) throw new Error(JSON.stringify(authData));
