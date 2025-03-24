@@ -1,7 +1,7 @@
 const fetch = require("node-fetch");
 
-const accountId = "005fa8f08ff41590000000002";
-const applicationKey = "K005rTY6c7IuYqYDDdYQbhlCEc9qy3Y";
+const accountId = "005fa8f08ff41590000000007";
+const applicationKey = "K005GSPBDYHFwmnMHSMPTVgvlxwabLw";
 const authUrl = "https://api.backblazeb2.com/b2api/v2/b2_authorize_account";
 
 exports.handler = async (event) => {
